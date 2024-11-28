@@ -4,54 +4,61 @@ from tkinter import messagebox
 
 class TicTacToe:
     def __init__(self, master):
-        self.master = master  # Определение корневого окна
-        self.master.title("Крестики-нолики")  # Установка заголовка окна
+        self.master = master
+        self.master.title("Крестики-нолики")
+        self.current_player = "X"
+        self.board = [" " for _ in range(9)]
+        self.buttons = self.create_buttons()
 
-        self.current_player = "X"  # Установка начального игрока
-        self.board = [" " for _ in range(9)]  # Создание пустого игрового поля
+        self.reset_button = tk.Button(self.master, text="Новая игра", command=self.reset_game)
+        self.reset_button.grid(row=3, column=0, columnspan=3, sticky="nsew")
 
-        self.buttons = []  # Создание списка для хранения кнопок игрового поля
+    def create_buttons(self):
+        buttons = []
         for i in range(3):
-            row = []  # Создание списка для хранения кнопок в строке
+            row = []
             for j in range(3):
-                # Создание кнопки и привязка метода on_button_click к событию нажатия
                 button = tk.Button(self.master, text=" ", font=("Arial", 20), width=5, height=2,
                                    command=lambda i=i, j=j: self.on_button_click(i, j))
-                button.grid(row=i, column=j, sticky="nsew")  # Размещение кнопки на сетке
-                row.append(button)  # Добавление кнопки в строку
-            self.buttons.append(row)  # Добавление строки кнопок в общий список
-
-        self.reset_button = tk.Button(self.master, text="Новая игра", command=self.reset_game)  # Создание кнопки для сброса игры
-        self.reset_button.grid(row=3, column=0, columnspan=3, sticky="nsew")  # Размещение кнопки на сетке
+                button.grid(row=i, column=j, sticky="nsew")
+                row.append(button)
+            buttons.append(row)
+        return buttons
 
     def on_button_click(self, i, j):
-        if self.board[i * 3 + j] == " ":  # Проверка, что клетка пуста
-            self.board[i * 3 + j] = self.current_player  # Установка символа текущего игрока в клетку
-            self.buttons[i][j].config(text=self.current_player)  # Обновление текста на кнопке
-            if self.check_winner(i, j):  # Проверка на победу
-                messagebox.showinfo("Победа", f"Игрок {self.current_player} выиграл!")  # Отображение сообщения о победе
-                self.reset_game()  # Сброс игры
-            elif " " not in self.board:  # Проверка на ничью
-                messagebox.showinfo("Ничья", "Ничья!")  # Отображение сообщения о ничьей
-                self.reset_game()  # Сброс игры
+        index = i * 3 + j
+        if self.board[index] == " ":
+            self.board[index] = self.current_player
+            self.buttons[i][j].config(text=self.current_player)
+            winner = self.check_winner()
+            if winner:
+                messagebox.showinfo("Победа", f"Игрок {winner} выиграл!" if winner != "draw" else "Ничья!")
+                self.reset_game()
             else:
-                self.current_player = "O" if self.current_player == "X" else "X"  # Смена игрока
+                self.current_player = "O" if self.current_player == "X" else "X"
 
-    def check_winner(self, i, j):
-        row = all(self.board[i*3 + col] == self.current_player for col in range(3))  # Проверка по горизонтали
-        col = all(self.board[row*3 + j] == self.current_player for row in range(3))  # Проверка по вертикали
-        diag1 = all(self.board[i*3 + i] == self.current_player for i in range(3))  # Проверка по диагонали
-        diag2 = all(self.board[i*3 + 2-i] == self.current_player for i in range(3))  # Проверка по диагонали
-        return any([row, col, diag1, diag2])  # Возвращает True, если есть победа
+    def check_winner(self):
+        win_conditions = [
+            [0, 1, 2], [3, 4, 5], [6, 7, 8],  # Rows
+            [0, 3, 6], [1, 4, 7], [2, 5, 8],  # Columns
+            [0, 4, 8], [2, 4, 6]             # Diagonals
+        ]
+        for condition in win_conditions:
+            if all(self.board[i] == self.current_player for i in condition):
+                return self.current_player
+        if " " not in self.board:
+            return "draw"
+        return None
 
     def reset_game(self):
-        self.current_player = "X"  # Установка начального игрока
-        self.board = [" " for _ in range(9)]  # Очистка игрового поля
-        for i in range(3):
-            for j in range(3):
-                self.buttons[i][j].config(text=" ")  # Очистка текста на кнопках
+        self.current_player = "X"
+        self.board = [" " for _ in range(9)]
+        for row in self.buttons:
+            for button in row:
+                button.config(text=" ")
 
 
 root = tk.Tk()
 game = TicTacToe(root)
 root.mainloop()
+
